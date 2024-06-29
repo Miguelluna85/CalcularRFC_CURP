@@ -1,0 +1,188 @@
+﻿using CalcularCURPyRFC.Models;
+using CalcularCURPyRFC.ViewModel.Enums;
+
+namespace CalcularCURPyRFC.ViewModel;
+
+/// <summary>
+///     La classe Curp.
+/// </summary>
+public class CURP_VM
+{
+    /// <summary>
+    ///     Genera la CURP.
+    /// </summary>
+    /// <param name="nombres"> Los nombres.</param>
+    /// <param name="paterno"> El apellido paterno.</param>
+    /// <param name="materno"> El apellido materno.</param>
+    /// <param name="Genero"> El Genero.</param>
+    /// <param name="fechaNacimiento"> La fecha de nacimiento.</param>
+    /// <param name="estado"> El estado o entidad federativa de nacimiento.</param>
+    /// <returns>La CURP.</returns>
+    private PersonaFisica Persona;
+    public string Generar(PersonaFisica persona)
+    {
+        Persona = persona;
+        // Aplicar filtros
+        var nombreTemp = Filtrar(Persona.PrimerNombre + " " + Persona.SegundoNombre);
+        var paternoTemp = Filtrar(Persona.ApellidoPaterno);
+        var maternoTemp = Filtrar(Persona.ApellidoMaterno);
+
+        // Posicion 1-4
+        var uno = paternoTemp[0] == 'Ñ' ? 'X' : paternoTemp[0];
+        var dos = paternoTemp.InternalVowel(1) ?? 'X';
+        var tres = string.IsNullOrWhiteSpace(maternoTemp) ? 'X' : (maternoTemp[0] == 'Ñ' ? 'X' : maternoTemp[0]);
+        var cuatro = nombreTemp[0] == 'Ñ' ? 'X' : nombreTemp[0];
+
+        var fecha = $"{Persona.FechaNacimiento:yy}{Persona.FechaNacimiento.Month:D2}{Persona.FechaNacimiento.Day:D2}";
+        var estadoCodigo = CodigosEstado[Persona.Estado];
+
+        // Posicion 14-16
+        var x = paternoTemp.InternalConsonant(1);
+        var y = maternoTemp?.InternalConsonant(1);
+        var z = nombreTemp.InternalConsonant(1);
+
+        var catorce = x == null ? 'X' : x == 'Ñ' ? 'X' : x;
+        var quince = y == null ? 'X' : y == 'Ñ' ? 'X' : y;
+        var dieciseis = z == null ? 'X' : z == 'Ñ' ? 'X' : z;
+
+        // Pre CURP
+        var preCURP = $"{uno}{dos}{tres}{cuatro}{fecha}{(char)Persona.Sexo}{estadoCodigo}{catorce}{quince}{dieciseis}";
+
+        // Reemplaza el 2do caracter por una X donde comience con alguna de las palabras de la lisa de "Palabras Inconvenientes"
+        if (StringExtensions.PalabrasInconvenientesCURP.Contains(preCURP.Substring(0, 4)))
+        {
+            preCURP = preCURP[0] + "X" + preCURP.Substring(2);
+        }
+
+        // Digito diferenciador de homonimia y siglo
+        var diferenciador = Persona.FechaNacimiento.Year < 2000 ? "0" : "A";
+
+        // Digito verificador
+        var codigoVerificador = CodigoVerificador(preCURP);
+
+        return $"{preCURP}{diferenciador}{codigoVerificador}";
+    }
+    /// <summary>
+    ///     Calcula el codigo verificador en base a la pre CURP.
+    /// </summary>
+    /// <param name="preCURP"> La pre CURP.</param>
+    /// <returns> El código verificador.</returns>
+    /// <exception cref="ArgumentException"> Cuando alguno de los caracteres de la pre CURP no es válido.</exception>
+    private int CodigoVerificador(string preCURP)
+    {
+        var contador = 18;
+        var sumatoria = 0;
+
+        const string caracteres = "0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+
+        // Por cada caracter
+        foreach (var caracter in preCURP)
+        {
+            var index = caracteres.IndexOf(caracter);
+
+            if (index == -1)
+            {
+                throw new ArgumentException($"Carácter inválido en la compisición de la pre CURP. [{caracter}]");
+            }
+
+            var valor = index * contador;
+            contador--;
+            sumatoria += valor;
+        }
+
+        // 12.- 2do digito verificador
+        var numVer = sumatoria % 10;
+        numVer = 10 - numVer;
+        numVer = numVer == 10 ? 0 : numVer;
+
+        return numVer;
+    }
+    /// <summary>
+    ///     Aplica filtros a un texto en base a lo establecido para conformar la CURP.
+    /// </summary>
+    /// <param name="str">El texto a filtrar.</param>
+    /// <returns> El texto resultante.</returns>
+    private string Filtrar(string str)
+    {
+        if (string.IsNullOrWhiteSpace(str))
+            return null;
+
+        // Nombres, paterno y materno en mayuscula
+        str = str.ToUpper();
+
+        // Eliminar acentos en vocales
+        str = str.RemoveAccentMarks();
+
+        // Eliminar dieresis en vocales
+        str = str.RemoveVowelDieresis();
+
+        // Criterios de excepcion
+        var palabras = str.Split(' ')
+            .Where(i => !string.IsNullOrWhiteSpace(i))
+            .ToList();
+
+        // Preposición, conjunción, contraccion
+        var arr_1 = new[] { "DA", "DAS", "DE", "DEL", "DER", "DI", "DIE", "DD", "EL", "LA", "LOS", "LAS", "LE", "LES", "MAC", "MC", "VAN", "VON", "Y", "J", "MA" };
+
+        palabras = palabras.Where(i => !arr_1.Contains(i))
+            .ToList();
+
+        // Nombre compuesto
+        var arr_2 = new[] { "MARIA", "MA.", "MA", "JOSE", "J", "J." };
+
+        if (palabras.Count >= 2 && arr_2.Contains(palabras[0]))
+        {
+            palabras.RemoveAt(0);
+        }
+
+        // Caracteres especiales
+        str = palabras[0]
+            .Replace('/', 'X')
+            .Replace('-', 'X')
+            .Replace('.', 'X');
+
+        return str;
+    }
+    /// <summary>
+    ///     Directorio de estados.
+    /// </summary>
+    private readonly Dictionary<Estado, string> CodigosEstado = new Dictionary<Estado, string>
+        {
+            { Estado.Aguascalientes, "AS" },
+            { Estado.Baja_California, "BC" },
+            { Estado.Baja_California_Sur, "BS" },
+            { Estado.Campeche, "CC" },
+            { Estado.Chiapas, "CS" },
+            { Estado.Chihuahua, "CH" },
+            { Estado.Coahuila, "CL" },
+            { Estado.Colima, "CM" },
+            { Estado.Distrito_Federal, "DF" },
+            { Estado.Durango, "DG" },
+            { Estado.Guanajuato, "GT" },
+            { Estado.Guerrero, "GR" },
+            { Estado.Hidalgo, "HG" },
+            { Estado.Jalisco, "JC" },
+            { Estado.Mexico, "MC" },
+            { Estado.Morelos, "MS" },
+            { Estado.Michoacan, "MN" },
+            { Estado.Nayarit, "NT" },
+            { Estado.Nuevo_Leon, "NL" },
+            { Estado.Oaxaca, "OC" },
+            { Estado.Puebla, "PL" },
+            { Estado.Queretaro, "QT" },
+            { Estado.Quintana_Roo, "QR" },
+            { Estado.San_Luis_Potosi, "SP" },
+            { Estado.Sinaloa, "SL" },
+            { Estado.Sonora, "SR" },
+            { Estado.Tabasco, "TC" },
+            { Estado.Tamaulipas, "TS" },
+            { Estado.Tlaxcala, "TL" },
+            { Estado.Veracruz, "VZ" },
+            { Estado.Yucatan, "YN" },
+            { Estado.Zacatecas, "ZS" },
+            { Estado.Extranjero, "NE" }
+        };
+
+
+
+}

@@ -1,0 +1,131 @@
+﻿@model CalcularCURPyRFC.ViewModel.PersonaFisica_VM
+@{
+    ViewData["Title"] = "Calcula CURP";
+}
+
+<div class="text-center">
+    <h2>Calcular CURP</h2>
+</div>
+<hr />
+
+<div class="row">
+    <div class="col-md-10">
+        <form id="formCurp" asp-action="ResultadoCURP" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label asp-for="primerNombre" class="control-label"></label>
+                        <input asp-for="primerNombre" class="form-control" />
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="primerNombre" class="text-danger "></span>
+
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label asp-for="segundoNombre" class="control-label"></label>
+                        <input asp-for="segundoNombre" class="form-control" />
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="segundoNombre" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label asp-for="Paterno" class="control-label"></label>
+                        <input asp-for="Paterno" class="form-control" />
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="Paterno" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label asp-for="Materno" class="control-label"></label>
+                        <input asp-for="Materno" class="form-control" />
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="Materno" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label asp-for="fechaNacimiento" class="control-label"></label>
+                        <input asp-for="fechaNacimiento" type="date" asp-format="dd/MM/yyyy" value="" class="form-control" />
+                        @* @Html.TextBoxFor(m => m.fechaNacimiento, "yyyy-MM-dd", new { @type = "date" }) *@
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="fechaNacimiento" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label class="control-label"></label>
+                        @* @Html.DropDownListFor(s=>s.SelectedSexo, Model.ListSexo, "Seleccione Sexo", new { @class = "form-select" }) *@
+                        <select asp-for="SelectedSexoID" asp-items="Model.ListSexo" class="form-select">
+                            <option value="0" class="fw-bold">Seleccione Sexo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="SelectedSexoID" class="text-danger" ></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label class="control-label"></label>
+                        <select asp-for="SelectedEstadoID" asp-items="Model.ListEstado" class="form-select">
+                            <option value="0">Seleccione Estado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-7 align-content-md-center">
+                        <span asp-validation-for="SelectedEstadoID" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Generar" class="btn btn-primary col-md-4" />
+            </div>
+        </form>
+    </div>
+
+</div>
+@section Scripts {
+    @{
+        //     <script>
+        // $(document).ready(function () {
+        //     $('#fechaNacimiento').on('blur', function () {
+        //         var fecha = $(this).val();
+        //         // Ejemplo de validación básica de formato de fecha (puedes ajustarlo según tus necesidades)
+        //         if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        //             alert('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        //             $(this).val('');
+        //         }
+        //     });
+        // });
+        //    </script>
+
+
+
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+
+
+
+    }
+}

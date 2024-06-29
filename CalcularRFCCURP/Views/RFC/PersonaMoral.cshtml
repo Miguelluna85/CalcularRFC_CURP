@@ -1,0 +1,37 @@
+﻿@model CalcularCURPyRFC.Models.PersonaMoral
+@{
+    ViewData["Title"] = "Calcula RFC Persona Moral";
+}
+
+<div class="text-center">
+    <h2>Calcular RFC Persona Moral</h2>
+</div>
+<hr />
+
+<div class="row">
+    <div class="col-md-10">
+        <form asp-action="RFCCalculadoPM" method="get">
+            <div asp-validation-summary="ModelOnly" class="text-danger col-md-6"></div>           
+            <div class="form-group col-md-7">
+                <label asp-for="RazonSocial" class="control-label"></label>
+                <input asp-for="RazonSocial" class="form-control" />
+                <span asp-validation-for="RazonSocial" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-5">
+                <label asp-for="FechaConstitucion" class="control-label"></label>
+                <input asp-for="FechaConstitucion" type="date" asp-format="dd/MM/yyyy" value="" class="form-control" />
+                <span asp-validation-for="FechaConstitucion" class="text-danger"></span>
+            </div>
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Generar" class="btn btn-primary col-md-5" />
+            </div>
+        </form>
+
+    </div>
+</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
